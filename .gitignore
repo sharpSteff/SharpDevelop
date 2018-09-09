@@ -31,3 +31,4 @@ bin/
 *.suo
 .DS_Store
 /.vs
+/samples/AvalonEdit.Sample/.vs
