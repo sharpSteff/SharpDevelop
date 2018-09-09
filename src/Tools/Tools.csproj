@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{C2777D59-5CB7-42F4-BF92-166DF88E8ACD}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Tools</RootNamespace>
+    <AssemblyName>Tools</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <IntermediateOutputPath>C:\Users\Stefan\AppData\Local\Temp\vsBD99.tmp\Debug\</IntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <IntermediateOutputPath>C:\Users\Stefan\AppData\Local\Temp\vsBD99.tmp\Release\</IntermediateOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <LanguageResourcePath>..\..\data\resources\</LanguageResourcePath>
+    <PreBuildEvent>(robocopy $(ProjectDir)\NUnit "$(ProjectDir)\..\..\bin\Tools\NUnit" *.dll *.exe *.config /MIR )^&amp; IF %25ERRORLEVEL%25 GEQ 8 exit 1
+(robocopy $(ProjectDir)\OpenCover "$(ProjectDir)\..\..\bin\Tools\OpenCover" /MIR )^&amp; IF %25ERRORLEVEL%25 GEQ 8 exit 1
+(robocopy $(ProjectDir)\..\Libraries\GraphSharp "$(ProjectDir)\..\..\bin" /MIR )^&amp; IF %25ERRORLEVEL%25 GEQ 8 exit 1
+exit 0</PreBuildEvent>
+  </PropertyGroup>
+  <Target Name="CompileLanguageResources" Inputs="@(LanguageResource)" Outputs="@(LanguageResource->'$(LanguageResourcePath)%(Filename).resources')">
+    <GenerateResource Sources="@(LanguageResource)" OutputResources="@(LanguageResource->'$(LanguageResourcePath)%(Filename).resources')" />
+  </Target>
+  <Target Name="Rebuild" DependsOnTargets="Build" />
+  <Target Name="PrepareRelease">
+    <!--<MSBuild Projects="@(PrepareReleaseProject)" Targets="Build"/>-->
+    <MSBuild Projects="UpdateAssemblyInfo\UpdateAssemblyInfo.csproj" Targets="Build" Properties="Configuration=Debug" />
+    <Exec Command="UpdateAssemblyInfo.exe --REVISION --branchname $(BranchName)" WorkingDirectory="UpdateAssemblyInfo\bin\Debug" Timeout="60000" Condition=" '$(BranchName)' != '' " />
+    <Exec Command="UpdateAssemblyInfo.exe --REVISION" WorkingDirectory="UpdateAssemblyInfo\bin\Debug" Timeout="60000" Condition=" '$(BranchName)' == '' " />
+  </Target>
+  <Target Name="PrepareXcopyZip">
+    <MSBuild Projects="ZipFromMsi\ZipFromMsi.csproj" Targets="Build" Properties="Configuration=Debug" />
+    <Exec Command="ZipFromMsi.exe" WorkingDirectory="ZipFromMsi\bin\Debug" Timeout="60000" />
+  </Target>
+  <Target Name="Clean">
+    <!-- <Exec Command="unregister.bat" WorkingDirectory="..\..\bin\setup\help" IgnoreExitCode = "true" Condition = "Exists('..\..\bin\setup\help\unregister.bat')"/> -->
+    <RemoveDir Directories="@(SpecialObjCleanupDirectories->'%(RelativeDir)')" />
+    <RemoveDir Directories="@(CleanupDirectories)" />
+    <Delete Files="@(CleanupFiles)" />
+  </Target>
+</Project>
